@@ -1,38 +1,25 @@
+#!/usr/bin/node
 $(document).ready(function () {
-  let listChecked = {};
+  const amenityIds = {};
 
-  $('li input[type="checkbox"]').change(function () {
-    const id = this.dataset.id;
-    const name = this.dataset.name;
+  $('input[type=checkbox]').change(function () {
+    const amenityId = $(this).data('id');
+    const amenityName = $(this).data('name');
 
-    if (this.checked) {
-      listChecked[id] = name;
+    if ($(this).prop('checked')) {
+      amenityIds[amenityId] = amenityName;
     } else {
-      delete listChecked[id];
+      delete amenityIds[amenityId];
     }
 
-    // Iterate through the object and join values
-    const checkedNames = Object.values(listChecked).join(', ');
-
-    // Update the content of the <h4> element with the checked items
-    $('.amenities h4').text(checkedNames);
+    $('.amenities h4').text(Object.values(amenityIds).join(', '));
   });
+});
 
-  $.ajax({
-    url: 'http://127.0.0.1:5001/api/v1/status/',
-    method: 'GET',
-    dataType: 'json',
-    success: function (data) {
-      if (data['status'] === 'OK') {
-        $('div#api_status').addClass('available');
-      } else {
-        $('div#api_status').removeClass('available');
-      }
-    },
-    error: function (xhr, status, error) {
-      // Handle errors here
-      console.error('Error fetching data:', error);
-      $('div#api_status').removeClass('available');
-    },
-  });
+$.getJSON("http://0.0.0.0:5001/api/v1/status/", (data) => {
+  if (data.status === "OK") {
+    $("div#api_status").addClass("available");
+  } else {
+    $("div#api_status").removeClass("available");
+  }
 });

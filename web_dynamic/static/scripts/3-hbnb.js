@@ -1,87 +1,54 @@
+#!/usr/bin/node
 $(document).ready(function () {
-  let listChecked = {};
+  const amenityIds = {};
 
-  $('li input[type="checkbox"]').change(function () {
-    const id = this.dataset.id;
-    const name = this.dataset.name;
+  $('input[type=checkbox]').change(function () {
+    const amenityId = $(this).data('id');
+    const amenityName = $(this).data('name');
 
-    if (this.checked) {
-      listChecked[id] = name;
+    if ($(this).prop('checked')) {
+      amenityIds[amenityId] = amenityName;
     } else {
-      delete listChecked[id];
+      delete amenityIds[amenityId];
     }
 
-    // Iterate through the object and join values
-    const checkedNames = Object.values(listChecked).join(', ');
-
-    // Update the content of the <h4> element with the checked items
-    $('.amenities h4').text(checkedNames);
+    $('.amenities h4').text(Object.values(amenityIds).join(', '));
   });
+});
 
-  $.ajax({
-    url: 'http://127.0.0.1:5001/api/v1/status/',
-    method: 'GET',
-    dataType: 'json',
-    success: function (data) {
-      if (data['status'] === 'OK') {
-        $('div#api_status').addClass('available');
-      } else {
-        $('div#api_status').removeClass('available');
+$.getJSON("http://0.0.0.0:5001/api/v1/status/", (data) => {
+  if (data.status === "OK") {
+    $("div#api_status").addClass("available");
+  } else {
+    $("div#api_status").removeClass("available");
+  }
+});
+
+
+$.ajax({
+  url: 'http://0.0.0.0:5001/api/v1/places_search/',
+  type: 'POST',
+  contentType: 'application/json',
+  data: JSON.stringify({}),
+  success: function (data) {
+      for (const place of data) {
+
+          const article = `<article>
+              <div class="title_box">
+                  <h2>${place.name}</h2>
+                  <div class="price_by_night">${place.price_by_night}</div>
+              </div>
+              <div class="information">
+                  <div class="max_guest">${place.max_guest} Guest(s)</div>
+                  <div class="number_rooms">${place.number_rooms} Bedroom(s)</div>
+                  <div class="number_bathrooms">${place.number_bathrooms} Bathroom(s)</div>
+              </div>
+              <div class="description">
+                  ${place.description}
+              </div>
+          </article>`;
+
+          $('section.places').append(article);
       }
-    },
-    error: function (xhr, status, error) {
-      // Handle errors here
-      console.error('Error fetching data:', error);
-      $('div#api_status').removeClass('available');
-    },
-  });
-
-  let jsonData = {};
-  $.ajax({
-    url: 'http://127.0.0.1:5001/api/v1/places_search/',
-    method: 'POST',
-    dataType: 'json',
-    data: JSON.stringify(jsonData),
-    contentType: 'application/json',
-    success: function (data) {
-      // Sort the data by place name
-      data.sort(function (a, b) {
-        return a.name.localeCompare(b.name);
-      });
-      $.each(data, function (index, place) {
-        var article = $('<article>');
-        var titleBox = $('<div class="title_box">');
-        var title = $('<h2>').text(place.name);
-        var priceByNight = $('<div class="price_by_night">').text(
-          '$' + place.price_by_night
-        );
-        var information = $('<div class="information">');
-        var maxGuest = $('<div class="max_guest">').text(
-          place.max_guest + (place.max_guest != 1 ? ' Guests' : ' Guest')
-        );
-        var numberRooms = $('<div class="number_rooms">').text(
-          place.number_rooms
-        );
-        var numberBathrooms = $('<div class="number_bathrooms">').text(
-          place.number_bathrooms
-        );
-        var user = $('<div class="user">').html(
-          '<b>Owner:</b> ' + place.user_id
-        );
-        var description = $('<div class="description">').html(
-          place.description
-        );
-
-        titleBox.append(title, priceByNight);
-        information.append(maxGuest, numberRooms, numberBathrooms);
-        article.append(titleBox, information, description);
-
-        $('.places').append(article);
-      });
-    },
-    error: function (xhr, status, error) {
-      // Handle errors here
-      console.error('Error fetching data:', error);
-    },
-  });
+  }
 });
